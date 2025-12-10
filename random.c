@@ -22,6 +22,5 @@ static inline uint32_t fast_rand_u32(void) {
 }
 
 static inline int randInt6(void) { 
-    // Cheap version:
     return fast_rand_u32() % 6;
 }

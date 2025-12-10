@@ -27,7 +27,7 @@ static inline int randInt6(void) { // 0..5
     return (int)(fast_rand_u32() % 6u);
 }
 
-static inline bool do_turn(Board* board, int die) {
+static inline bool makeMove(Board* board, int die) {
     uint8_t* tiles = board->tiles;
     uint8_t size = board->size;
     if (die >= size) {
@@ -61,12 +61,12 @@ static inline void roll_sorted(int *hi, int *lo) {
 static inline bool player_turn(Board *board) {
     int d1, d2;
     roll_sorted(&d1, &d2);
-    if (do_turn(board, d1)) return true;
-    if (do_turn(board, d2)) return true;
+    if (makeMove(board, d1)) return true;
+    if (makeMove(board, d2)) return true;
 
     if (d1 == d2) {
-        if (do_turn(board, d1)) return true;
-        if (do_turn(board, d2)) return true;
+        if (makeMove(board, d1)) return true;
+        if (makeMove(board, d2)) return true;
     }
     return false;
 }

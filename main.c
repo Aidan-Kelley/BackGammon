@@ -12,7 +12,7 @@ typedef struct {
 #define PLAYER_ONE_BOARD {0,2,0,3,0,0}
 #define PLAYER_TWO_BOARD {0,2,0,0,0,1}
 
-static inline bool do_turn(Board* board, int die) {
+static inline bool makeMove(Board* board, int die) {
     char* tiles = board->tiles;
     char size = board->size;
     if (die >= size) {
@@ -55,31 +55,36 @@ void print(const Board board, const int* roll, int p) {
     printf("\n");
 }
 
-bool runGame(bool debug) {
-    Board player1Board = {3,{0,2,1,0,0,0}};
-    Board player2Board = {3,{0,2,2,0,0,0}};
+void shrinkBoard(Board* board) {
+    for (int i = 5; i >= 0; i--) {
+        if (board->tiles[i] != 0) {
+            board->size = i + 1;
+            return;
+        }
+    }
+}
+
+bool player_turn(Board* board) {
+    int* currentRoll = roll(); 
+    if (makeMove(board, currentRoll[0])) return true;
+    if (makeMove(board, currentRoll[1])) return true;
+    if(currentRoll[0] == currentRoll[1]) { // doubles
+        if (makeMove(board, currentRoll[0])) return true;
+        if (makeMove(board, currentRoll[1])) return true;
+    }
+    return false;
+}
+
+bool runGame() {
+    Board player1Board = {0, PLAYER_ONE_BOARD};
+    Board player2Board = {0, PLAYER_TWO_BOARD};
+
+    shrinkBoard(&player1Board);
+    shrinkBoard(&player2Board);
 
     while (true) {
-        int* currentRoll = roll(); 
-        if (do_turn(&player1Board, currentRoll[0])) return true;
-        if (do_turn(&player1Board, currentRoll[1])) return true;
-        if(currentRoll[0] == currentRoll[1]) { // doubles
-            if (do_turn(&player1Board, currentRoll[0])) return true;
-            if (do_turn(&player1Board, currentRoll[1])) return true;
-        }
-        if (debug)
-            print(player1Board,currentRoll, 1);
-        
-        
-        currentRoll = roll(); 
-        if (do_turn(&player2Board, currentRoll[0])) return false;
-        if (do_turn(&player2Board, currentRoll[1])) return false;
-        if(currentRoll[0] == currentRoll[1]) { // doubles
-            if (do_turn(&player2Board, currentRoll[0])) return false;
-            if (do_turn(&player2Board, currentRoll[1])) return false;
-        }
-        if (debug)
-            print(player2Board,currentRoll, 2);
+        if (player_turn(&player1Board)) return true;
+        if (player_turn(&player2Board)) return false;
     }
 }
 
@@ -87,10 +92,10 @@ int main() {
     initRandom();
     clock_t begin, end;
     begin = clock();
-    uint64_t trials = 4000000;
+    const uint64_t trials = 4000000;
     uint64_t wins = 0;
     for (uint64_t i = 0; i < trials; i++) {
-        if (runGame(false))
+        if (runGame())
             wins++;
     }
     end = clock();
