@@ -9,8 +9,8 @@ typedef struct {
     char tiles[6];
 } Board;
 
-#define PLAYER_ONE_BOARD {4,1,1,0,0,0}
-#define PLAYER_TWO_BOARD {3,4,2,0,0,1}
+#define PLAYER_ONE_BOARD {2,0,4,2,0,2}
+#define PLAYER_TWO_BOARD {1,3,2,3,2,3}
 
 static inline bool makeMove(Board* board, int die) {
     char* tiles = board->tiles;
@@ -49,7 +49,7 @@ void print(const Board board, const int* roll, int p) {
     printf("Player %d Roll: %d, %d\n", p, roll[0], roll[1]);
     printf("Player %d Board: ", p);
     printf("%d",board.tiles[0]);
-    for (int i = 1; i < board.size; i++) {
+    for (int i = 1; i < 6; i++) {
         printf(", %d",board.tiles[i]);
     }
     printf("\n");
@@ -75,18 +75,6 @@ bool player_turn(Board* board) {
     return false;
 }
 
-bool runGameReverse() {
-    Board player1Board = {0, PLAYER_TWO_BOARD};
-    Board player2Board = {0, PLAYER_ONE_BOARD};
-
-    shrinkBoard(&player1Board);
-    shrinkBoard(&player2Board);
-
-    while (true) {
-        if (player_turn(&player1Board)) return true;
-        if (player_turn(&player2Board)) return false;
-    }
-}
 bool runGame() {
     Board player1Board = {0, PLAYER_ONE_BOARD};
     Board player2Board = {0, PLAYER_TWO_BOARD};
@@ -99,18 +87,50 @@ bool runGame() {
         if (player_turn(&player2Board)) return false;
     }
 }
+bool runDebugGame() {
+    Board player1Board = {0, PLAYER_ONE_BOARD};
+    Board player2Board = {0, PLAYER_TWO_BOARD};
+
+    shrinkBoard(&player1Board);
+    shrinkBoard(&player2Board);
+
+    while (true) { 
+        int* currentRoll = roll(); 
+        if (makeMove(&player1Board, currentRoll[0])) return true; 
+        if (makeMove(&player1Board, currentRoll[1])) return true; 
+        if(currentRoll[0] == currentRoll[1]) { // doubles 
+            if (makeMove(&player1Board, currentRoll[0])) return true; 
+            if (makeMove(&player1Board, currentRoll[1])) return true; 
+        }
+        print(player1Board,currentRoll, 1); 
+        
+        currentRoll = roll();
+
+        if (makeMove(&player2Board, currentRoll[0])) return false; 
+        if (makeMove(&player2Board, currentRoll[1])) return false; 
+        if(currentRoll[0] == currentRoll[1]) { // doubles 
+            if (makeMove(&player2Board, currentRoll[0])) return false; 
+            if (makeMove(&player2Board, currentRoll[1])) return false; 
+        } 
+        print(player2Board,currentRoll, 2); 
+    } 
+}
 
 int main() {
     initRandom();
     clock_t begin, end;
     begin = clock();
-    const uint64_t trials = 4000000;
+    const uint64_t trials = 100000000;
     uint64_t wins = 0;
+    int seed = 0;
     for (uint64_t i = 0; i < trials; i++) {
+        seed = rng_state;
         if (runGame())
             wins++;
+        else
+            printf("%d\n",seed);
     }
     end = clock();
-    printf("%f in %f\n",(double)wins / trials, (double)(end - begin) / CLOCKS_PER_SEC);
+    printf("%.17f in %f\n",wins / (double)trials, (double)(end - begin) / CLOCKS_PER_SEC);
     return 0;
 }
