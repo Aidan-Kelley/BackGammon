@@ -9,8 +9,8 @@ typedef struct {
     char tiles[6];
 } Board;
 
-#define PLAYER_ONE_BOARD {0,2,0,3,0,0}
-#define PLAYER_TWO_BOARD {0,2,0,0,0,1}
+#define PLAYER_ONE_BOARD {1,1,1,2,3,1}
+#define PLAYER_TWO_BOARD {1,1,2,1,2,2}
 
 static inline bool makeMove(Board* board, int die) {
     char* tiles = board->tiles;
@@ -75,6 +75,18 @@ bool player_turn(Board* board) {
     return false;
 }
 
+bool runGameReverse() {
+    Board player1Board = {0, PLAYER_TWO_BOARD};
+    Board player2Board = {0, PLAYER_ONE_BOARD};
+
+    shrinkBoard(&player1Board);
+    shrinkBoard(&player2Board);
+
+    while (true) {
+        if (player_turn(&player1Board)) return true;
+        if (player_turn(&player2Board)) return false;
+    }
+}
 bool runGame() {
     Board player1Board = {0, PLAYER_ONE_BOARD};
     Board player2Board = {0, PLAYER_TWO_BOARD};
@@ -99,6 +111,5 @@ int main() {
             wins++;
     }
     end = clock();
-    printf("%f in %f",(double)wins / trials, (double)(end - begin) / CLOCKS_PER_SEC);
     return 0;
 }
