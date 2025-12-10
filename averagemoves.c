@@ -87,16 +87,17 @@ bool runGameReverse() {
         if (player_turn(&player2Board)) return false;
     }
 }
-bool runGame() {
+int runGame() {
     Board player1Board = {0, PLAYER_ONE_BOARD};
     Board player2Board = {0, PLAYER_TWO_BOARD};
 
     shrinkBoard(&player1Board);
     shrinkBoard(&player2Board);
-
+    int moves = 0;
     while (true) {
-        if (player_turn(&player1Board)) return true;
-        if (player_turn(&player2Board)) return false;
+        moves++;
+        if (player_turn(&player1Board)) return moves;
+        // if (player_turn(&player2Board)) return moves;
     }
 }
 
@@ -105,12 +106,11 @@ int main() {
     clock_t begin, end;
     begin = clock();
     const uint64_t trials = 4000000;
-    uint64_t wins = 0;
+    uint64_t moves = 0;
     for (uint64_t i = 0; i < trials; i++) {
         if (runGame())
-            wins++;
+            moves++;
     }
     end = clock();
-    printf("%f in %f\n",(double)wins / trials, (double)(end - begin) / CLOCKS_PER_SEC);
     return 0;
 }
