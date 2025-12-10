@@ -9,8 +9,8 @@ typedef struct {
     char tiles[6];
 } Board;
 
-#define PLAYER_ONE_BOARD {1,1,1,2,3,1}
-#define PLAYER_TWO_BOARD {1,1,2,1,2,2}
+#define PLAYER_ONE_BOARD {1,2,1,2,3,1}
+#define PLAYER_TWO_BOARD {1,2,2,1,2,2}
 
 static inline bool makeMove(Board* board, int die) {
     char* tiles = board->tiles;
@@ -108,9 +108,9 @@ int main() {
     const uint64_t trials = 4000000;
     uint64_t moves = 0;
     for (uint64_t i = 0; i < trials; i++) {
-        if (runGame())
-            moves++;
+            moves += runGame();
     }
     end = clock();
+    printf("Average of %f moves in %f\n",(double)moves / trials, (double)(end - begin) / CLOCKS_PER_SEC);
     return 0;
 }

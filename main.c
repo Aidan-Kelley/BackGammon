@@ -9,8 +9,8 @@ typedef struct {
     char tiles[6];
 } Board;
 
-#define PLAYER_ONE_BOARD {1,1,1,2,3,1}
-#define PLAYER_TWO_BOARD {1,1,2,1,2,2}
+#define PLAYER_ONE_BOARD {4,1,1,0,0,0}
+#define PLAYER_TWO_BOARD {3,4,2,0,0,1}
 
 static inline bool makeMove(Board* board, int die) {
     char* tiles = board->tiles;
