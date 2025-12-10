@@ -1,0 +1,99 @@
+#include <stdio.h>
+#include "random.c"
+#include <stdint.h>
+#include <stdbool.h>
+#include <string.h>
+
+typedef struct {
+    char size;
+    char tiles[6];
+} Board;
+
+#define PLAYER_ONE_BOARD {0,2,0,3,0,0}
+#define PLAYER_TWO_BOARD {0,2,0,0,0,1}
+
+static inline bool do_turn(Board* board, int die) {
+    char* tiles = board->tiles;
+    char size = board->size;
+    if (die >= size) {
+        tiles[size - 1]--;
+    } else if (tiles[die] != 0) {
+        tiles[die]--;
+    } else {
+        tiles[size - 1]--;
+        tiles[size - 1 - (die + 1)]++;
+    }
+    while (tiles[board->size - 1] == 0) {
+        board->size--;
+        if(board->size == 0)
+            return true;
+    }
+    return false;
+}
+
+int* roll() {
+    int die1 = randInt6();
+    int die2 = randInt6();
+    static int arr[2];
+    if (die1 > die2) {
+        arr[0] = die1;
+        arr[1] = die2;
+    } else {
+        arr[0] = die2;
+        arr[1] = die1;
+    }
+    return arr;
+}
+
+void print(const Board board, const int* roll, int p) {
+    printf("Player %d Roll: %d, %d\n", p, roll[0], roll[1]);
+    printf("Player %d Board: ", p);
+    printf("%d",board.tiles[0]);
+    for (int i = 1; i < board.size; i++) {
+        printf(", %d",board.tiles[i]);
+    }
+    printf("\n");
+}
+
+bool runGame(bool debug) {
+    Board player1Board = {3,{0,2,1,0,0,0}};
+    Board player2Board = {3,{0,2,2,0,0,0}};
+
+    while (true) {
+        int* currentRoll = roll(); 
+        if (do_turn(&player1Board, currentRoll[0])) return true;
+        if (do_turn(&player1Board, currentRoll[1])) return true;
+        if(currentRoll[0] == currentRoll[1]) { // doubles
+            if (do_turn(&player1Board, currentRoll[0])) return true;
+            if (do_turn(&player1Board, currentRoll[1])) return true;
+        }
+        if (debug)
+            print(player1Board,currentRoll, 1);
+        
+        
+        currentRoll = roll(); 
+        if (do_turn(&player2Board, currentRoll[0])) return false;
+        if (do_turn(&player2Board, currentRoll[1])) return false;
+        if(currentRoll[0] == currentRoll[1]) { // doubles
+            if (do_turn(&player2Board, currentRoll[0])) return false;
+            if (do_turn(&player2Board, currentRoll[1])) return false;
+        }
+        if (debug)
+            print(player2Board,currentRoll, 2);
+    }
+}
+
+int main() {
+    initRandom();
+    clock_t begin, end;
+    begin = clock();
+    uint64_t trials = 4000000;
+    uint64_t wins = 0;
+    for (uint64_t i = 0; i < trials; i++) {
+        if (runGame(false))
+            wins++;
+    }
+    end = clock();
+    printf("%f in %f",(double)wins / trials, (double)(end - begin) / CLOCKS_PER_SEC);
+    return 0;
+}
