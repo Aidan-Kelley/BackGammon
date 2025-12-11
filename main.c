@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include "random.c"
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
@@ -12,49 +11,23 @@ bool runGame() {
     Board player1Board = {0, PLAYER_ONE_BOARD};
     Board player2Board = {0, PLAYER_TWO_BOARD};
 
-    determineSize(&player1Board);
-    determineSize(&player2Board);
+    player1Board.size = determineSize((const char*)&player1Board.tiles);
+    player2Board.size = determineSize((const char*)&player2Board.tiles);
 
     while (true) {
         if (player_turn(&player1Board)) return true;
         if (player_turn(&player2Board)) return false;
     }
 }
-bool runDebugGame() {
-    Board player1Board = {0, PLAYER_ONE_BOARD};
-    Board player2Board = {0, PLAYER_TWO_BOARD};
-
-    determineSize(&player1Board);
-    determineSize(&player2Board);
-
-    while (true) { 
-        int* currentRoll = roll(); 
-        if (makeMove(&player1Board, currentRoll[0])) return true; 
-        if (makeMove(&player1Board, currentRoll[1])) return true; 
-        if(currentRoll[0] == currentRoll[1]) { // doubles 
-            if (makeMove(&player1Board, currentRoll[0])) return true; 
-            if (makeMove(&player1Board, currentRoll[1])) return true; 
-        }
-        print(player1Board,currentRoll, 1); 
-        
-        currentRoll = roll();
-
-        if (makeMove(&player2Board, currentRoll[0])) return false; 
-        if (makeMove(&player2Board, currentRoll[1])) return false; 
-        if(currentRoll[0] == currentRoll[1]) { // doubles 
-            if (makeMove(&player2Board, currentRoll[0])) return false; 
-            if (makeMove(&player2Board, currentRoll[1])) return false; 
-        } 
-        print(player2Board,currentRoll, 2); 
-    } 
-}
 
 int main() {
+
     initRandom();
     clock_t begin, end;
     begin = clock();
     const uint64_t trials = 1000000;
     uint64_t wins = 0;
+
     for (uint64_t i = 0; i < trials; i++) {
         if (runGame())
             wins++;

@@ -70,11 +70,3 @@ bool player_turn(Board* board) {
     }
     return false;
 }
-
-uint32_t compressBoard(const char* board) {
-    uint32_t result = 0;
-    for (int i = 0; i < 6; i++) {
-        result |= board[i] << (i * 4);
-    }
-    return result;
-}

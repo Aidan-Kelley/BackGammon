@@ -11,7 +11,7 @@ uint32_t compressBoard(const char* board) {
 }
 
 int main() {
-    char board[6] = {2,0,3,5,2,3};
+    char board[6] = {0,2,3,1,3,1};
     uint32_t idx = compressBoard(board);
     printf("%d\n",idx);
     FILE *f = fopen("table.bin", "rb");
