@@ -9,8 +9,8 @@ typedef struct {
     char tiles[6];
 } Board;
 
-#define PLAYER_ONE_BOARD {0,3,3,3,3,3}
-#define PLAYER_TWO_BOARD {0,0,0,0,0,8}
+#define STARTING_BOARD {1,0,2,1,4,6}
+#define PLAYER_TWO_BOARD {0,3,0,0,3,8}
 
 static inline bool makeMove(Board* board, int die) {
     char* tiles = board->tiles;
@@ -23,6 +23,7 @@ static inline bool makeMove(Board* board, int die) {
         tiles[size - 1]--;
         tiles[size - 1 - (die + 1)]++;
     }
+
     while (tiles[board->size - 1] == 0) {
         board->size--;
         if(board->size == 0)
@@ -55,7 +56,7 @@ void print(const Board board, const int* roll, int p) {
     printf("\n");
 }
 
-void shrinkBoard(Board* board) {
+void determineSize(Board* board) {
     for (int i = 5; i >= 0; i--) {
         if (board->tiles[i] != 0) {
             board->size = i + 1;
@@ -76,11 +77,11 @@ bool player_turn(Board* board) {
 }
 
 bool runGame() {
-    Board player1Board = {0, PLAYER_ONE_BOARD};
+    Board player1Board = {0, STARTING_BOARD};
     Board player2Board = {0, PLAYER_TWO_BOARD};
 
-    shrinkBoard(&player1Board);
-    shrinkBoard(&player2Board);
+    determineSize(&player1Board);
+    determineSize(&player2Board);
 
     while (true) {
         if (player_turn(&player1Board)) return true;
@@ -88,11 +89,11 @@ bool runGame() {
     }
 }
 bool runDebugGame() {
-    Board player1Board = {0, PLAYER_ONE_BOARD};
+    Board player1Board = {0, STARTING_BOARD};
     Board player2Board = {0, PLAYER_TWO_BOARD};
 
-    shrinkBoard(&player1Board);
-    shrinkBoard(&player2Board);
+    determineSize(&player1Board);
+    determineSize(&player2Board);
 
     while (true) { 
         int* currentRoll = roll(); 
@@ -127,6 +128,6 @@ int main() {
             wins++;
     }
     end = clock();
-    printf("%.17f in %f\n",wins / (double)trials, (double)(end - begin) / CLOCKS_PER_SEC);
+    printf("%.17f in %f\n", wins / (double)trials, (double)(end - begin) / CLOCKS_PER_SEC);
     return 0;
 }

@@ -9,8 +9,7 @@ typedef struct {
     char tiles[6];
 } Board;
 
-#define PLAYER_ONE_BOARD {1,2,1,2,3,1}
-#define PLAYER_TWO_BOARD {1,2,2,1,2,2}
+const char STARTING_BOARD[] = {0,0,3,3,4,4};
 
 static inline bool makeMove(Board* board, int die) {
     char* tiles = board->tiles;
@@ -55,11 +54,10 @@ void print(const Board board, const int* roll, int p) {
     printf("\n");
 }
 
-void shrinkBoard(Board* board) {
+size_t determineSize(const char* board) {
     for (int i = 5; i >= 0; i--) {
-        if (board->tiles[i] != 0) {
-            board->size = i + 1;
-            return;
+        if (board[i] != 0) {
+            return i + 1;
         }
     }
 }
@@ -75,42 +73,38 @@ bool player_turn(Board* board) {
     return false;
 }
 
-bool runGameReverse() {
-    Board player1Board = {0, PLAYER_TWO_BOARD};
-    Board player2Board = {0, PLAYER_ONE_BOARD};
+int runGame(const char* startingBoard, size_t size) {
+    Board player1Board = { .size = size };
+    memcpy(player1Board.tiles,startingBoard,size * sizeof(char));
 
-    shrinkBoard(&player1Board);
-    shrinkBoard(&player2Board);
-
-    while (true) {
-        if (player_turn(&player1Board)) return true;
-        if (player_turn(&player2Board)) return false;
-    }
-}
-int runGame() {
-    Board player1Board = {0, PLAYER_ONE_BOARD};
-    Board player2Board = {0, PLAYER_TWO_BOARD};
-
-    shrinkBoard(&player1Board);
-    shrinkBoard(&player2Board);
     int moves = 0;
     while (true) {
         moves++;
         if (player_turn(&player1Board)) return moves;
-        // if (player_turn(&player2Board)) return moves;
     }
+}
+
+double runSimulation(const char* startingBoard, uint64_t trials) {
+    uint64_t moves = 0;
+    size_t size = determineSize(startingBoard);
+    for (uint64_t i = 0; i < trials; i++) {
+        moves += runGame(startingBoard, size);
+    }
+    return moves / (double) trials;
+}
+
+uint32_t compressBoard(const char* board) {
+    uint32_t result = 0;
+    for (int i = 0; i < 6; i++) {
+        result |= board[i] << (i * 4);
+    }
+    return result;
 }
 
 int main() {
     initRandom();
-    clock_t begin, end;
-    begin = clock();
-    const uint64_t trials = 4000000;
-    uint64_t moves = 0;
-    for (uint64_t i = 0; i < trials; i++) {
-            moves += runGame();
-    }
-    end = clock();
-    printf("Average of %f moves in %f\n",(double)moves / trials, (double)(end - begin) / CLOCKS_PER_SEC);
+    uint64_t trials = 10000000;
+    double averageMoves = runSimulation(STARTING_BOARD,10000000);
+    printf("Average of %f moves\n",averageMoves);
     return 0;
 }
