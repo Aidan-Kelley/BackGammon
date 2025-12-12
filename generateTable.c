@@ -15,13 +15,19 @@ int runGame(const char* startingBoard, size_t size) {
     }
 }
 
-float runSimulation(const char* startingBoard, uint64_t trials) {
-    uint64_t moves = 0;
+double runSimulation(const char* startingBoard, float* winChances, uint64_t trials) {
+    uint64_t totalMoves = 0;
+    uint32_t winsPerTurn[22] = {};
     size_t size = determineSize(startingBoard);
     for (uint64_t i = 0; i < trials; i++) {
-        moves += runGame(startingBoard, size);
+        uint8_t moves = runGame(startingBoard, size);
+        totalMoves += moves;
+        winsPerTurn[(moves > 21) ? 21 : moves]++;
     }
-    return moves / (float) trials;
+    for(int i = 0; i < 22; i++) {
+        winChances[i] = winsPerTurn[i] / (float)trials;
+    }
+    return totalMoves / (double) trials;
 }
 
 uint32_t compressBoard(const char* board) {
@@ -33,40 +39,32 @@ uint32_t compressBoard(const char* board) {
 }
 
 int main() {
-    // char b[6] = {3,2,0,0,6,3};
-    // float averageMoves = runSimulation(b,10000000);
-    // printf("Average of %f moves\n",averageMoves);
-    // return 0;
     initRandom();
-    const uint64_t trials = 100000;
+    const uint64_t trials = 100;
     float averageMoves;
     int x0, x1, x2, x3, x4, x5, x6;
-    float* table = malloc(15728641 * sizeof(float));
-    for (x0 = 0; x0 <= 15; x0++) {
+    FILE *f = fopen("winspercents.bin", "ab");
+    for (x0 = 0; x0 <= 14; x0++) {
         printf("outermost loop%d\n",x0);
         for (x1 = 0; x1 <= 15 - x0; x1++) {
             printf("middle loop%d\n",x1);
             for (x2 = 0; x2 <= 15 - x0 - x1; x2++) {
-                printf("inner loop%d",x2);
                 for (x3 = 0; x3 <= 15 - x0 - x1 - x2; x3++) {
                     for (x4 = 0; x4 <= 15 - x0 - x1 - x2 - x3; x4++) {
                         for (x5 = 0; x5 <= 15 - x0 - x1 - x2 - x3 - x4; x5++) {
-
                             x6 = 15 - (x0 + x1 + x2 + x3 + x4 + x5);
-                            // printf("(%d, %d, %d, %d, %d, %d)\n",
-                            //        x1, x2, x3, x4, x5, x6);
                             char state[6] = {x1, x2, x3, x4, x5, x6};
-                            averageMoves = runSimulation(state,trials);
-                            table[compressBoard(state)] = averageMoves;
+                            uint32_t boardId = compressBoard(state);
+                            fwrite(&boardId,sizeof(boardId),1,f);
+                            float winsPerTurnBuf[22] = {};
+                            double averageMoves = runSimulation(state, winsPerTurnBuf, trials);
+                            fwrite(winsPerTurnBuf,sizeof(winsPerTurnBuf),1,f);
                         }
                     }
                 }
             }
         }
     }
-    FILE *f = fopen("table.bin", "wb");
-    fwrite(table, sizeof(float), 15728640, f);
     fclose(f);
-    free(table);
-    return 0;
+    printf("done");
 }
