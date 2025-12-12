@@ -20,6 +20,10 @@ double runSimulation(const char* startingBoard, float* winChances, uint8_t* maxT
     uint8_t max = 0;
     uint32_t winsPerTurn[22] = {};
     size_t size = determineSize(startingBoard);
+    if(size == 0) {
+        *maxTurns = 0;
+        return 0;
+    }
     for (uint64_t i = 0; i < trials; i++) {
         uint8_t moves = runGame(startingBoard, size);
         totalMoves += moves;
@@ -45,20 +49,21 @@ uint32_t compressBoard(const char* board) {
 
 int main() {
     initRandom();
-    const uint64_t trials = 100;
+    const uint64_t trials = 100000;
     float averageMoves;
     int x0, x1, x2, x3, x4, x5, x6;
     FILE *f = fopen("percents.txt", "a");
-    for (x0 = 0; x0 <= 14; x0++) {
-        printf("outermost loop%d\n",x0);
+    for (x0 = 0; x0 <= 15; x0++) {
+        printf("outerloop %d\n",x0);
         for (x1 = 0; x1 <= 15 - x0; x1++) {
-            printf("middle loop%d\n",x1);
             for (x2 = 0; x2 <= 15 - x0 - x1; x2++) {
                 for (x3 = 0; x3 <= 15 - x0 - x1 - x2; x3++) {
                     for (x4 = 0; x4 <= 15 - x0 - x1 - x2 - x3; x4++) {
                         for (x5 = 0; x5 <= 15 - x0 - x1 - x2 - x3 - x4; x5++) {
-                            x6 = 15 - (x0 + x1 + x2 + x3 + x4 + x5);
-                            char state[6] = {x1, x2, x3, x4, x5, x6};
+
+                            // x6 = 15 - (x0 + x1 + x2 + x3 + x4 + x5);
+                            char state[6] = {x5,x4,x3,x2,x1,x0};
+                            // char state[6] = {x1, x2, x3, x4, x5, x6};
                             uint32_t boardId = compressBoard(state);
                             // fwrite(&boardId,sizeof(boardId),1,f);
                             fprintf(f,"%8d",boardId);
@@ -66,7 +71,7 @@ int main() {
                             float winsPerTurnBuf[22] = {};
                             double averageMoves = runSimulation(state, winsPerTurnBuf, &maxTurns, trials);
                             for (int i = 0; i <= maxTurns; i++) {
-                                fprintf(f,"%.5f",winsPerTurnBuf[i]);
+                                fprintf(f,"%.5f,",winsPerTurnBuf[i]);
                             }
                             fprintf(f,"\n");
                             // fwrite(winsPerTurnBuf,sizeof(winsPerTurnBuf),1,f);

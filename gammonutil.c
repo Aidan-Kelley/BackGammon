@@ -58,6 +58,7 @@ size_t determineSize(const char* board) {
             return i + 1;
         }
     }
+    return 0;
 }
 
 bool player_turn(Board* board) {
