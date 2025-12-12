@@ -9,7 +9,7 @@ typedef struct {
     char tiles[6];
 } Board;
 //540,000,000,000
-const char STARTING_BOARD[] = {0,2,3,1,3,1};
+const char STARTING_BOARD[] = {0,0,0,0,0,15};
 
 static inline bool makeMove(Board* board, int die) {
     char* tiles = board->tiles;

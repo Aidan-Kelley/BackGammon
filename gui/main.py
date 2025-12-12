@@ -1,11 +1,9 @@
 import pygame
 import game
 
-pygame.init()
-
 running = True
 clock = pygame.time.Clock() 
-
+game.init()
 while game.gameLoop():
     # Update the display to show the new drawing
     pygame.display.update()

@@ -4,8 +4,8 @@
 #include <string.h>
 #include "gammonutil.c"
 
-#define PLAYER_ONE_BOARD {1,0,2,1,4,6}
-#define PLAYER_TWO_BOARD {0,3,0,0,3,8}
+#define PLAYER_ONE_BOARD {0,3,1,0,2,1}
+#define PLAYER_TWO_BOARD {1,1,2,3,3,3}
 
 bool runGame() {
     Board player1Board = {0, PLAYER_ONE_BOARD};
