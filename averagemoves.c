@@ -42,11 +42,11 @@ uint32_t compressBoard(const char* board) {
     return result;
 }
 
-double winChance(float* heroChanges, float* oppChances) {
+double winChance(float* heroChances, float* oppChances) {
     float winChance = 0.0;
     float oppWinChance = 0.0;
     for (int i = 0; i < 25; i++) {
-        winChance += heroChanges[i] * (1 - oppWinChance);
+        winChance += heroChances[i] * (1 - oppWinChance);
         oppWinChance += oppChances[i];
     }
     return winChance;

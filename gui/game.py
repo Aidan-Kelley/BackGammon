@@ -59,7 +59,7 @@ class Stone:
                 board[self.space] -= 1
                 self.space = self.x // 90
                 board[self.space] += 1
-                text_surface = font.render("%.5f" % (lookup(board)), True, (255,255,255))
+                text_surface = font.render("Avg Moves: %.5f \n Win%% against same board: %f" % (lookup(board),chanceOfWinning(board,board)), True, (255,255,255))
                 self.floor = 660 - board[self.space] * STONE_RADIUS * 2 
                 
         if self.dragging:
@@ -78,7 +78,7 @@ class Stone:
         # 3. Blit the text surface to the screen
         
 
-def compressBoard(board : List[int]) -> int:
+def getBoardId(board : List[int]) -> int:
     result = 0
     for i in range(1,len(board)):
         result |= board[i] << ((i - 1) * 4)
@@ -86,7 +86,30 @@ def compressBoard(board : List[int]) -> int:
 
 def lookup(board : List[int]) -> float:
     with open("tyler.bin","rb") as f:
-        f.seek(compressBoard(board) * 4)
+        f.seek(getBoardId(board) * 4)
         bytes = f.read(4)
         value = struct.unpack('<f', bytes)[0]
         return value
+
+def chanceOfWinning(heroBoard, oppBoard):
+    heroChances = getPercents(heroBoard)
+    oppChances = getPercents(oppBoard)
+    winChance = 0.0
+    oppWinChance = 0.0
+    for i in range(len(heroChances)):
+        winChance += heroChances[i] * (1 - oppWinChance)
+        if i < len(oppChances):
+            oppWinChance += oppChances[i]
+    return winChance
+
+def getPercents(board : List[int]) -> List[float]:
+    with open("percents.txt","r") as file:
+        id = getBoardId(board)
+        s = ""
+        for line in file:
+            if(int(line[:8]) == id):
+                s = line
+                break
+        strfloats = s[8:-2].split(",")
+        return list(map(float, strfloats))
+    
