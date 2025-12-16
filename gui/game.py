@@ -3,11 +3,12 @@ from typing import List
 import pygame
 from util import *
 
-SCREEN_WIDTH = 640
+SCREEN_WIDTH = 640 * 2 + 100
 SCREEN_HEIGHT = 640
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 stones : List['Stone'] = []
 board : List[int] = [0,0,0,0,0,0,0]
+updateText : bool = False
 
 def init():
     global font
@@ -20,8 +21,7 @@ def init():
         stones.append(Stone(50,600 - i*60,0))
 
 def gameLoop() -> bool:
-    global font
-    global text_surface 
+    global font, updateText, text_surface 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
@@ -32,8 +32,9 @@ def gameLoop() -> bool:
             stone.tick()
     if text_surface is not None:
         screen.blit(text_surface)
-
-
+    if updateText:
+        text_surface = font.render("Avg Moves: %.5f \n Win%% against same board: %f" % (lookup(board),chanceOfWinning(board,board)), True, (255,255,255))
+        updateText = False
 
     return True
 
@@ -53,31 +54,33 @@ class Stone:
         self.y = y
 
     def tick(self):
-        global text_surface
+        global text_surface, updateText
         self.yVel += 1
-        if pygame.mouse.get_just_pressed()[0] and (dist(pygame.mouse.get_pos(), (self.x,self.y)) < STONE_RADIUS or self.dragging):
-            self.dragging = not self.dragging
+        if pygame.mouse.get_pressed()[0] and (dist(pygame.mouse.get_pos(), (self.x,self.y)) < STONE_RADIUS or self.dragging):
+            self.dragging = True
             if(not self.dragging):
-                board[self.space] -= 1
-                for stone in stones:
-                    if stone.space == self.space and stone.floor < self.floor:
-                        stone.floor += STONE_RADIUS * 2 
-                self.space = self.x // 90
-                board[self.space] += 1
-                text_surface = font.render("Avg Moves: %.5f \n Win%% against same board: %f" % (lookup(board),chanceOfWinning(board,board)), True, (255,255,255))
-                self.floor = 660 - board[self.space] * STONE_RADIUS * 2 
-              
-                
+                pass
+        if pygame.mouse.get_just_released()[0] and self.dragging:
+            self.dragging = False
+            board[self.space] -= 1
+            for stone in stones:
+                if stone.space == self.space and stone.floor < self.floor:
+                    stone.floor += STONE_RADIUS * 2 
+            self.space = self.x // 90
+            board[self.space] += 1
+            self.floor = 660 - board[self.space] * STONE_RADIUS * 2 
+            updateText = True
+
+
         if self.dragging:
            self.x, self.y = pygame.mouse.get_pos()
            self.x = clamp(self.x,45,585)
            self.yVel = 0
-        
-
-        self.y += self.yVel
-        if(self.y > self.floor):
+        elif(self.y >= self.floor):
             self.y = self.floor
             self.yVel = 0
+
+        self.y += self.yVel
         self.x = self.x - (self.x % 90) + 45
         pygame.draw.circle(screen, (255,255,255), (self.x ,self.y), STONE_RADIUS)
 
