@@ -33,6 +33,8 @@ def gameLoop() -> bool:
     if text_surface is not None:
         screen.blit(text_surface)
 
+
+
     return True
 
 class Stone:
@@ -57,10 +59,14 @@ class Stone:
             self.dragging = not self.dragging
             if(not self.dragging):
                 board[self.space] -= 1
+                for stone in stones:
+                    if stone.space == self.space and stone.floor < self.floor:
+                        stone.floor += STONE_RADIUS * 2 
                 self.space = self.x // 90
                 board[self.space] += 1
                 text_surface = font.render("Avg Moves: %.5f \n Win%% against same board: %f" % (lookup(board),chanceOfWinning(board,board)), True, (255,255,255))
                 self.floor = 660 - board[self.space] * STONE_RADIUS * 2 
+              
                 
         if self.dragging:
            self.x, self.y = pygame.mouse.get_pos()
@@ -85,15 +91,15 @@ def getBoardId(board : List[int]) -> int:
     return result
 
 def lookup(board : List[int]) -> float:
-    with open("tyler.bin","rb") as f:
+    with open("C:\\Users\\aidan\\Documents\\Small Code Projects\\BackGammon\\gui\\tyler.bin","rb") as f:
         f.seek(getBoardId(board) * 4)
         bytes = f.read(4)
         value = struct.unpack('<f', bytes)[0]
         return value
 
 def chanceOfWinning(heroBoard, oppBoard):
-    heroChances = getPercents(heroBoard)
-    oppChances = getPercents(oppBoard)
+    heroChances = getWinProbabilities(heroBoard)
+    oppChances = getWinProbabilities(oppBoard)
     winChance = 0.0
     oppWinChance = 0.0
     for i in range(len(heroChances)):
@@ -102,8 +108,8 @@ def chanceOfWinning(heroBoard, oppBoard):
             oppWinChance += oppChances[i]
     return winChance
 
-def getPercents(board : List[int]) -> List[float]:
-    with open("percents.txt","r") as file:
+def getWinProbabilities(board : List[int]) -> List[float]:
+    with open("C:\\Users\\aidan\\Documents\\Small Code Projects\\BackGammon\\gui\\percents.txt","r") as file:
         id = getBoardId(board)
         s = ""
         for line in file:
