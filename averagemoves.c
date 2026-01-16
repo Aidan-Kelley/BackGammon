@@ -4,7 +4,7 @@
 #include <string.h>
 #include "gammonutil.c"
 
-const char STARTING_BOARD[] = {0,0,0,0,1,14};
+const char STARTING_BOARD[] = {0,1,1,0,0,0};
 
 // chance of winning = (chance winning turn 1) + (chance winning turn2 - op winning turn 1) 
 
@@ -57,8 +57,6 @@ int main() {
     uint64_t trials = 10000000;
     float winsPerTurnBuf[22] = {};
     double averageMoves = runSimulation(STARTING_BOARD, winsPerTurnBuf, trials);
-    for (int i = 0; i < 22; i++) {
-
-    }
+    printf("Average moves: %.4f", averageMoves);
     return 0;
 }

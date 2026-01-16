@@ -1,3 +1,4 @@
+from enum import Enum
 import struct
 from typing import List
 import pygame
@@ -7,8 +8,13 @@ SCREEN_WIDTH = 640 * 2 + 100
 SCREEN_HEIGHT = 640
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 stones : List['Stone'] = []
-board : List[int] = [0,0,0,0,0,0,0]
+white_board : List[int] = [0,0,0,0,0,0,0]
+brown_board : List[int] = [0,0,0,0,0,0,0]
 updateText : bool = False
+
+class Color(Enum):
+    BROWN = (0x80,0x00,0x20)
+    WHITE = (0xFF,0xFF,0xFF)
 
 def init():
     global font
@@ -16,9 +22,10 @@ def init():
     pygame.init()
     pygame.font.init()
     font = pygame.font.SysFont(None, 48)
-    text_surface = font.render("%.5f" % (lookup(board)), True, (255,255,255))
+    text_surface = font.render("%.5f" % (lookup(white_board)), True, Color.WHITE.value)
     for i in range(15):
-        stones.append(Stone(50,600 - i*60,0))
+        stones.append(Stone(50,600 - i*60,0, Color.WHITE))
+        stones.append(Stone(50,600 - i*60,0, Color.BROWN))
 
 def gameLoop() -> bool:
     global font, updateText, text_surface 
@@ -33,9 +40,10 @@ def gameLoop() -> bool:
     if text_surface is not None:
         screen.blit(text_surface)
     if updateText:
-        text_surface = font.render("Avg Moves: %.5f \n Win%% against same board: %f" % (lookup(board),chanceOfWinning(board,board)), True, (255,255,255))
+        text_surface = font.render("Avg Moves: %.5f \n White Win Chance: %.2f%%" % (lookup(white_board),100 * chanceOfWinning(white_board,brown_board)), True, Color.WHITE
+.value)
         updateText = False
-
+    pygame.draw.line(screen, Color.WHITE.value, (640,640),(640,0), 3)
     return True
 
 class Stone:
@@ -45,35 +53,41 @@ class Stone:
     floor : int = 600
     hitbox = pygame.Rect()
     dragging : bool = False
+    color : Color
+    colorOffset = 0
 
-    def __init__(self, x : int, y : int, space : int):
+    def __init__(self, x : int, y : int, space : int, color : Color):
+        self.color = color
+        if color == Color.BROWN:
+            self.colorOffset = 640
         self.space = space
-        board[space] += 1
-        self.floor = 660 - board[self.space] * STONE_RADIUS * 2 
+        getBoard(self.color)[space] += 1
+        self.floor = 660 - getBoard(self.color)[self.space] * STONE_RADIUS * 2
         self.x = x
         self.y = y
 
     def tick(self):
         global text_surface, updateText
         self.yVel += 1
-        if pygame.mouse.get_pressed()[0] and (dist(pygame.mouse.get_pos(), (self.x,self.y)) < STONE_RADIUS or self.dragging):
+        if pygame.mouse.get_pressed()[0] and (dist(pygame.mouse.get_pos(), (self.x + self.colorOffset,self.y)) < STONE_RADIUS or self.dragging):
             self.dragging = True
             if(not self.dragging):
                 pass
         if pygame.mouse.get_just_released()[0] and self.dragging:
             self.dragging = False
-            board[self.space] -= 1
+            getBoard(self.color)[self.space] -= 1
             for stone in stones:
-                if stone.space == self.space and stone.floor < self.floor:
+                if stone.color == self. color and stone.space == self.space and stone.floor < self.floor:
                     stone.floor += STONE_RADIUS * 2 
             self.space = self.x // 90
-            board[self.space] += 1
-            self.floor = 660 - board[self.space] * STONE_RADIUS * 2 
+            getBoard(self.color)[self.space] += 1
+            self.floor = 660 - getBoard(self.color)[self.space] * STONE_RADIUS * 2 
             updateText = True
 
 
         if self.dragging:
            self.x, self.y = pygame.mouse.get_pos()
+           self.x -= self.colorOffset
            self.x = clamp(self.x,45,585)
            self.yVel = 0
         elif(self.y >= self.floor):
@@ -82,10 +96,15 @@ class Stone:
 
         self.y += self.yVel
         self.x = self.x - (self.x % 90) + 45
-        pygame.draw.circle(screen, (255,255,255), (self.x ,self.y), STONE_RADIUS)
+        pygame.draw.circle(screen, self.color
+.value, (self.x + self.colorOffset,self.y), STONE_RADIUS)
 
         # 3. Blit the text surface to the screen
         
+def getBoard(color : Color) -> List[int]:
+    if color == Color.WHITE:
+       return white_board
+    return brown_board
 
 def getBoardId(board : List[int]) -> int:
     result = 0
